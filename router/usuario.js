@@ -1,5 +1,6 @@
 const {Router} = require('express');
 const Usuario= require('../models/Usuario');
+const {validarUsuario} = require ('../helpers/validar-usuario');
 
 const router = Router();
 
@@ -7,9 +8,16 @@ router.post('/',async function(req, res){
     
     try{
 
+        const validaciones= validarUsuario(req);
+
+        if (validaciones.length >0){
+            return res.status(400).send(validaciones);
+        }
+
+
         const existeUsuario= await Usuario.findOne({email: req.body.email});
         if (existeUsuario) {
-            return res.send('Email ya existe');
+            return res.status(400).send('Email ya existe');
         }
 
         console.log(req.body);
@@ -27,7 +35,7 @@ router.post('/',async function(req, res){
 
     } catch (error){
         console.log(error);
-        res.send('Ocurrió un error al crear usuario');
+        res.status(500).send('Ocurrió un error al crear usuario');
     }
 });
 
@@ -37,7 +45,7 @@ router.get('/', async function(req, res){
         res.send(usuarios);
     } catch(error){
         console.log(error);
-        res.send('Ocurrió un eror');
+        res.status(500).send('Ocurrió un eror');
     }
     
 });
@@ -45,14 +53,21 @@ router.get('/', async function(req, res){
 router.put('/:usuarioId', async function(req, res){
     try{
 
+        const validaciones= validarUsuario(req);
+
+        if (validaciones.length >0){
+            return res.status(400).send(validaciones);
+        }
+
+
         let usuario= await Usuario.findById(req.params.usuarioId);
         if (!usuario) {
-            return res.send('usuario no existe');
+            return res.status(400).send('usuario no existe');
         }
 
         const existeUsuario= await Usuario.findOne({email: req.body.email, _id: {$ne: usuario._id}});
         if (existeUsuario) {
-            return res.send('Email ya existe');
+            return res.status(400).send('Email ya existe');
         }
 
        
@@ -68,7 +83,7 @@ router.put('/:usuarioId', async function(req, res){
 
     } catch (error){
         console.log(error);
-        res.send('Ocurrió un error al actualizar usuario');
+        res.status(500).send('Ocurrió un error al actualizar usuario');
     }
 });
 
